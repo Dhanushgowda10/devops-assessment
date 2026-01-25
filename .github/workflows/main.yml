@@ -65,9 +65,27 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/devops-assessment || git clone https://github.com/Nexgensis/devops-assessment.git ~/devops-assessment
+            # 1. Setup project directory
+            if [ ! -d "~/devops-assessment" ]; then
+              git clone https://github.com/Nexgensis/devops-assessment.git ~/devops-assessment
+            fi
             cd ~/devops-assessment
             git pull origin main
-            docker compose pull
-            docker compose up -d
+
+            # 2. Determine correct Docker Compose command
+            if docker compose version > /dev/null 2>&1; then
+              DOCKER_CMD="docker compose"
+            else
+              DOCKER_CMD="docker-compose"
+            fi
+
+            # 3. Deploy
+            $DOCKER_CMD pull
+            $DOCKER_CMD up -d --remove-orphans
+
+            # 4. Wait for Backend to be ready before migrating
+            echo "Waiting for django_api to start..."
+            sleep 10
+            
+            # 5. Run Migrations
             docker exec django_api python manage.py migrate
