@@ -66,31 +66,26 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # 1. Setup project directory
-            cd /home/ubuntu
-            if [ ! -d "devops-assessment" ]; then
-              git clone https://github.com/Dhanushgowda10/devops-assessment.git
-            fi
-            cd devops-assessment
+            cd /home/ubuntu/devops-assessment || git clone https://github.com/Dhanushgowda10/devops-assessment.git /home/ubuntu/devops-assessment
+            cd /home/ubuntu/devops-assessment
             git pull origin main
 
-            # 2. Fix permissions & Docker command
-            if docker compose version > /dev/null 2>&1; then
-              DOCKER_CMD="sudo docker compose"
-            else
-              DOCKER_CMD="sudo docker-compose"
-            fi
+            # 2. Determine Docker Command
+            DOCKER_CMD="sudo docker compose"
 
-            # 3. Inject Public IP into Frontend and Backend .env
-            # This fixes the "Connection Failed" error by pointing the Frontend to the EC2 IP
+            # 3. Inject Environment Variables
+            # Point Frontend to the EC2 Public IP
             echo "VITE_API_URL=http://${{ needs.terraform.outputs.ec2_public_ip }}:8000" > frontend/.env
+            
+            # Setup Backend environment
             echo "DEBUG=False" > .env
-            echo "ALLOWED_HOSTS=${{ needs.terraform.outputs.ec2_public_ip }},localhost" >> .env
+            echo "ALLOWED_HOSTS=${{ needs.terraform.outputs.ec2_public_ip }},localhost,127.0.0.1" >> .env
 
-            # 4. Deploy (using --build to ensure the new .env is baked into the frontend)
+            # 4. Deploy with build to bake in the new VITE_API_URL
             $DOCKER_CMD pull
             $DOCKER_CMD up -d --build --remove-orphans
 
-            # 5. Wait and Migrate
-            echo "Waiting for django_api to start..."
+            # 5. Wait for database and migrate
+            echo "Waiting for backend initialization..."
             sleep 15
             sudo docker exec django_api python manage.py migrate
