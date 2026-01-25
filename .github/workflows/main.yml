@@ -1,0 +1,72 @@
+name: DevOps Assessment CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  terraform:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      ec2_public_ip: ${{ steps.set-ip.outputs.instance_public_ip }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Apply
+        id: apply
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Get EC2 IP
+        id: set-ip
+        run: |
+          cd terraform
+          echo "instance_public_ip=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  build-and-deploy:
+    name: Build & Deploy
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/django-backend ./backend
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/react-frontend ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/django-backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/react-frontend
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ needs.terraform.outputs.ec2_public_ip }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/devops-assessment || git clone https://github.com/Nexgensis/devops-assessment.git ~/devops-assessment
+            cd ~/devops-assessment
+            git pull origin main
+            docker compose pull
+            docker compose up -d
+            docker exec django_api python manage.py migrate
