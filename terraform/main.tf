@@ -1,5 +1,5 @@
 resource "aws_security_group" "app_sg" {
-  name        = "devops-assessment-sg12"
+  name        = "devops-assessment-security_group"
   description = "Allow HTTP, HTTPS, SSH, and Django API"
 
   # Frontend Port
