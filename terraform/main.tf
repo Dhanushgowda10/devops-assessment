@@ -38,11 +38,15 @@ resource "aws_instance" "web_server" {
   key_name               = "project" 
 
   user_data = <<-EOF
-              #!/bin/bash
-              sudo apt update && sudo apt install -y docker.io docker-compose
-              sudo systemctl start docker
-              sudo usermod -aG docker ubuntu
-              EOF
+            #!/bin/bash
+            sudo apt update
+            # Install Docker and the Docker Compose Plugin
+            sudo apt install -y docker.io docker-compose-v2
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            # Allow the ubuntu user to run docker commands
+            sudo usermod -aG docker ubuntu
+            EOF
 }
 
 output "public_ip" {
