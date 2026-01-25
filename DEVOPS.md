@@ -54,7 +54,6 @@ I implemented a **Build Argument** strategy:
 
 * **Multi-Stage Builds**: The frontend uses a multi-stage Dockerfile (Node.js for building, Nginx for serving) to minimize the final image size.
 * **Non-Root Execution**: The frontend container runs as the `nginx` user rather than `root` to follow the principle of least privilege.
-* *Verification*: `docker exec <container_id> id` returns `uid=101(nginx)`.
 
 
 * **Security Groups**: Only essential ports (80, 8000) are exposed to the public internet via Terraform.
