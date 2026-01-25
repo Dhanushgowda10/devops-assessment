@@ -1,7 +1,8 @@
 resource "aws_security_group" "app_sg" {
   name        = "devops-assessment-sg"
-  description = "Allow HTTP, HTTPS and SSH"
+  description = "Allow HTTP, HTTPS, SSH, and Django API"
 
+  # Frontend Port
   ingress {
     from_port   = 80
     to_port     = 80
@@ -9,9 +10,10 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Django Backend Port - MANDATORY for the "Connection Failed" fix
   ingress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = 8000
+    to_port     = 8000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
