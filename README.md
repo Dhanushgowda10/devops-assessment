@@ -70,4 +70,4 @@ I implemented a **Build Argument** strategy:
 ## 4. Submission Details
 
 * **Public Repository**: [https://github.com/Dhanushgowda10/devops-assessment](https://github.com/Dhanushgowda10/devops-assessment)
-* **Deployed URL**: [http://[44.222.95.123](http://44.222.95.2/)]
+* **Deployed URL**: [http://44.222.95.123](http://44.222.95.2/)]
