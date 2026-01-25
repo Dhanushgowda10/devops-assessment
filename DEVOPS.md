@@ -59,6 +59,13 @@ I implemented a **Build Argument** strategy:
 * **Security Groups**: Only essential ports (80, 8000) are exposed to the public internet via Terraform.
 
 ---
+# Screenshots
+## Application Screenshot
+<img src="https://github.com/Dhanushgowda10/devops-assessment/blob/main/screenshots/screenshot-2026-01-25_19-01-43.png" alt="Banner" />
+
+## Container running user
+<img src="https://github.com/Dhanushgowda10/devops-assessment/blob/main/screenshots/screenshot-2026-01-25_19-03-28.png" alt="Banner" />
+
 
 ## 4. Submission Details
 
