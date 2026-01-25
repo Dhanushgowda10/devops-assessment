@@ -67,7 +67,7 @@ jobs:
           script: |
             # 1. Setup project directory
             if [ ! -d "~/devops-assessment" ]; then
-              git clone https://github.com/Nexgensis/devops-assessment.git ~/devops-assessment
+              git clone https://github.com/Dhanushgowda10/devops-assessment.git ~/devops-assessment
             fi
             cd ~/devops-assessment
             git pull origin main
