@@ -1,9 +1,9 @@
 name: DevOps Assessment CI/CD
 
 on:
-  workflow_dispatch: 
-  #push:
-    #branches: [ main ]
+  push:
+    branches: [ main ]  # Automatically deploy on code changes
+  workflow_dispatch:     # Keep manual trigger for testing
 
 jobs:
   terraform:
@@ -19,7 +19,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init & Apply
-        id: apply
         run: |
           cd terraform
           terraform init
@@ -51,13 +50,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/django-backend ./backend
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/react-frontend ./frontend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/django-backend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/react-frontend
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -66,7 +58,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # 1. Setup project directory
-            cd /home/ubuntu
             if [ ! -d "devops-assessment" ]; then
               git clone https://github.com/Dhanushgowda10/devops-assessment.git
             fi
@@ -74,7 +65,6 @@ jobs:
             git pull origin main
 
             # 2. Define environment variables
-            # Injecting the EC2 IP into the build process for Vite
             export VITE_API_URL="http://${{ needs.terraform.outputs.ec2_public_ip }}:8000"
             
             # Setup Backend .env
@@ -82,11 +72,12 @@ jobs:
             echo "ALLOWED_HOSTS=${{ needs.terraform.outputs.ec2_public_ip }},localhost,127.0.0.1" >> .env
 
             # 3. Deploy
-            # -E preserves the VITE_API_URL variable for the Docker build
-            # --build is required to bake the new IP into the React static files
             sudo -E docker compose up -d --build --remove-orphans
 
             # 4. Wait and Migrate
             echo "Waiting for backend initialization..."
             sleep 15
             sudo docker exec django_api python manage.py migrate
+            
+            # 5. Cleanup old images
+            sudo docker image prune -f
