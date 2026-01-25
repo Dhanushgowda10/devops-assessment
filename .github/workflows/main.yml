@@ -74,23 +74,21 @@ jobs:
             git pull origin main
 
             # 2. Fix permissions & Docker command
-            # Force refresh of group membership for this session or use sudo
             if docker compose version > /dev/null 2>&1; then
               DOCKER_CMD="sudo docker compose"
             else
               DOCKER_CMD="sudo docker-compose"
             fi
 
-            # 3. Handle missing .env file (Prevents the "stat .env: no such file" error)
-            if [ ! -f ".env" ]; then
-              echo "Creating temporary .env file..."
-              touch .env
-              echo "DEBUG=False" >> .env
-            fi
+            # 3. Inject Public IP into Frontend and Backend .env
+            # This fixes the "Connection Failed" error by pointing the Frontend to the EC2 IP
+            echo "VITE_API_URL=http://${{ needs.terraform.outputs.ec2_public_ip }}:8000" > frontend/.env
+            echo "DEBUG=False" > .env
+            echo "ALLOWED_HOSTS=${{ needs.terraform.outputs.ec2_public_ip }},localhost" >> .env
 
-            # 4. Deploy
+            # 4. Deploy (using --build to ensure the new .env is baked into the frontend)
             $DOCKER_CMD pull
-            $DOCKER_CMD up -d --remove-orphans
+            $DOCKER_CMD up -d --build --remove-orphans
 
             # 5. Wait and Migrate
             echo "Waiting for django_api to start..."
