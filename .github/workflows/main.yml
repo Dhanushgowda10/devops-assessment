@@ -1,8 +1,8 @@
 name: DevOps Assessment CI/CD
 
 on:
-  push:
-    branches: [ main ]  # Automatically deploy on code changes
+  #push:
+   # branches: [ main ]  # Automatically deploy on code changes
   workflow_dispatch:     # Keep manual trigger for testing
 
 jobs:
