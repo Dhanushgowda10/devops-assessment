@@ -57,27 +57,39 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Setup project directory
+            # 1. Wait for Docker installation to complete (Max 2 minutes)
+            echo "Waiting for Docker installation..."
+            for i in {1..24}; do
+              if command -v docker &>/dev/null; then
+                echo "Docker is ready!"
+                break
+              fi
+              echo "Still waiting for Docker... ($((i*5))s)"
+              sleep 5
+            done
+
+            if ! command -v docker &>/dev/null; then
+              echo "ERROR: Docker was not installed in time."
+              exit 1
+            fi
+
+            # 2. Setup project directory
             if [ ! -d "devops-assessment" ]; then
               git clone https://github.com/Dhanushgowda10/devops-assessment.git
             fi
             cd devops-assessment
             git pull origin main
 
-            # 2. Define environment variables
+            # 3. Define environment variables for Vite and Django
             export VITE_API_URL="http://${{ needs.terraform.outputs.ec2_public_ip }}:8000"
-            
-            # Setup Backend .env
             echo "DEBUG=False" > .env
             echo "ALLOWED_HOSTS=${{ needs.terraform.outputs.ec2_public_ip }},localhost,127.0.0.1" >> .env
 
-            # 3. Deploy
+            # 4. Deploy with --build to bake in the VITE_API_URL
             sudo -E docker compose up -d --build --remove-orphans
 
-            # 4. Wait and Migrate
-            echo "Waiting for backend initialization..."
+            # 5. Finalize setup
+            echo "Waiting for containers to stabilize..."
             sleep 15
             sudo docker exec django_api python manage.py migrate
-            
-            # 5. Cleanup old images
             sudo docker image prune -f
