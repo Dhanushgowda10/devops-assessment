@@ -9,9 +9,11 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_instance" "web_server" {
-  ami           = "ami-0b6c6ebed2801a5cb "
-  instance_type = "t3.micro"
+  ami                    = "ami-0b6c6ebed2801a5cb" 
+  instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
+  # Add this line below:
+  key_name               = "project" 
 
   user_data = <<-EOF
               #!/bin/bash
@@ -19,4 +21,8 @@ resource "aws_instance" "web_server" {
               sudo systemctl start docker
               sudo usermod -aG docker ubuntu
               EOF
+}
+
+output "public_ip" {
+  value = aws_instance.web_server.public_ip
 }
