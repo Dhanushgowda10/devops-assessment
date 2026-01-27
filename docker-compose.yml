@@ -1,13 +1,12 @@
-version: '3.8'
 services:
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    image: dhanushgowda10/devops-backend:latest
     container_name: django_api
-    env_file: .env
+    env_file:
+      - .env
     ports:
       - "8000:8000"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/admin/')"]
       interval: 10s
@@ -15,14 +14,11 @@ services:
       retries: 3
 
   frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL}
+    image: dhanushgowda10/devops-frontend:latest
     container_name: react_web
     ports:
       - "80:80"
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
