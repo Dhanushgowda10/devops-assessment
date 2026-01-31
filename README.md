@@ -14,7 +14,7 @@ To run the application on your local machine:
 2. **Environment Variables**: Create a `.env` file in the root directory with `DEBUG=True` and `ALLOWED_HOSTS=localhost,127.0.0.1`.
 3. **Launch Containers**: Run `docker compose up -d --build`.
 4. **Access the App**:
-* **Frontend**: [http://54.163.6.189](http://54.163.6.189)
+* **Frontend**: [http://34.207.149.221](http://34.207.149.221)
 * **Backend API**: [http://98.92.81.147:8000/api/hello/](http://98.92.81.147:8000/api/hello/)
 
 
@@ -70,4 +70,4 @@ I implemented a **Build Argument** strategy:
 ## 4. Submission Details
 
 * **Public Repository**: [https://github.com/Dhanushgowda10/devops-assessment](https://github.com/Dhanushgowda10/devops-assessment)
-* **Deployed URL**: [[http://54.163.6.189](http://54.163.6.189)]
+* **Deployed URL**: [[http://34.207.149.221](http://34.207.149.221)]
